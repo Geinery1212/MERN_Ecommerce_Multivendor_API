@@ -36,18 +36,21 @@ class authControllers {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
-    getUser = async (req, res) => {
+    getUserInfo = async (req, res) => {
+        console.log('here');
         const { id, role } = req;
         try {
             if (role == 'admin') {
                 const user = await adminModel.findById(id);
                 response(res, 200, { userInfo: user });
-            } else {
-                console.log("it is not admin");
-
+            } else if (role == 'seller') {
+                const user = await sellerModel.findById(id);
+                console.log(user);
+                response(res, 200, { userInfo: user });
             }
         } catch (error) {
-
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
         }
     };
     sellerRegister = async (req, res) => {
@@ -83,8 +86,8 @@ class authControllers {
             // Set token as a cookie
             res.cookie('accessToken', token, {
                 expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
-                httpOnly: true, // Secure cookie
-                sameSite: 'strict' // CSRF protection
+                // httpOnly: true, // Secure cookie
+                // sameSite: 'strict' // CSRF protection
             });
 
             response(res, 201, { token, message: "Register Success" });
