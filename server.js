@@ -18,5 +18,6 @@ app.use(cookieParser());
 dbConnect();
 //Add routes
 app.use('/api', require('./routes/authRoutes'));
+app.use('/api', require('./routes/dashboard/categoryRoutes'));
 //Initialize the port and listen
 app.listen(port, () => console.log(`Server is running on port ${port}`));

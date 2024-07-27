@@ -5,7 +5,7 @@ const { response } = require('../utilities/response');
 const bcrypt = require('bcrypt');
 const { createToken } = require('../utilities/token');
 
-class authControllers {
+class authController {
     admin_login = async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -37,7 +37,6 @@ class authControllers {
         }
     };
     getUserInfo = async (req, res) => {
-        console.log('here');
         const { id, role } = req;
         try {
             if (role == 'admin') {
@@ -129,4 +128,4 @@ class authControllers {
     };
 
 }
-module.exports = new authControllers();
+module.exports = new authController();
