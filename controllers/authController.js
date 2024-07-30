@@ -43,8 +43,7 @@ class authController {
                 const user = await adminModel.findById(id);
                 response(res, 200, { userInfo: user });
             } else if (role == 'seller') {
-                const user = await sellerModel.findById(id);
-                console.log(user);
+                const user = await sellerModel.findById(id);                
                 response(res, 200, { userInfo: user });
             }
         } catch (error) {

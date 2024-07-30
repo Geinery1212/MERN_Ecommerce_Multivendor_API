@@ -19,5 +19,6 @@ dbConnect();
 //Add routes
 app.use('/api', require('./routes/authRoutes'));
 app.use('/api', require('./routes/dashboard/categoryRoutes'));
+app.use('/api', require('./routes/dashboard/productRoutes'));
 //Initialize the port and listen
 app.listen(port, () => console.log(`Server is running on port ${port}`));

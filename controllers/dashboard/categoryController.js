@@ -2,7 +2,7 @@ const formidable = require('formidable');
 const cloudinary = require('cloudinary').v2;
 const { response } = require('../../utilities/response');
 const categoryModel = require('../../models/categoryModel');
-class CategoryController {
+class categoryController {
     add = async (req, res) => {
         const form = formidable();
 
@@ -44,8 +44,11 @@ class CategoryController {
     }
     getAll = async (req, res) => {
         const { page, perPage, searchValue } = req.query;
-        const skipPage = parseInt(perPage) * (parseInt(page) - 1);
+        let skipPage = '';
         try {
+            if (page && perPage) {
+                skipPage = parseInt(perPage) * (parseInt(page) - 1);
+            }
             if (searchValue && page && searchValue) {
                 const categories = await categoryModel.find({
                     $text: { $search: searchValue }
@@ -75,4 +78,4 @@ class CategoryController {
         }
     }
 }
-module.exports = new CategoryController();
+module.exports = new categoryController();
