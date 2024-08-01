@@ -63,5 +63,42 @@ class productController {
             }
         })
     }
+
+    getAll = async (req, res) => {
+        const { page, perPage, searchValue } = req.query;
+        const sellerId = req.id;
+        let skipPage = '';
+        try {
+            if (page && perPage) {
+                skipPage = parseInt(perPage) * (parseInt(page) - 1);
+            }
+            if (searchValue && page && searchValue) {
+                const products = await productModel.find({
+                    $text: { $search: searchValue }, sellerId: sellerId
+                }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({
+                    $text: { $search: searchValue }, sellerId: sellerId
+                }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            } else if (searchValue === '' && page && perPage) {
+                const products = await productModel.find({ sellerId: sellerId }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({ sellerId: sellerId }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            } else {
+                const products = await productModel.find({ sellerId: sellerId }).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({ sellerId: sellerId }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            }
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+        }
+    }
 }
 module.exports = new productController();
