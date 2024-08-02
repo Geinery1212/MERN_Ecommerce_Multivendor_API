@@ -158,7 +158,49 @@ class productController {
                     const result = await cloudinary.uploader.upload(newImage.filepath,
                         { folder: 'products' }
                     );
+                    updateImage = async (req, res) => {
+                        try {
+                            const form = formidable({ multiples: true });
 
+                            form.parse(req, async (err, fields, files) => {
+                                // console.log(fields);
+                                // console.log(files);
+                                if (err) {
+                                    response(res, 400, { error: 'Something went wrong' })
+                                } else {
+                                    let { oldImage, productId } = fields;
+                                    let { newImage } = files;
+                                    cloudinary.config({
+                                        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                                        api_key: process.env.CLOUDINARY_API_KEY,
+                                        api_secret: process.env.CLOUDINARY_SECRET_KEY,
+                                        secure: true
+                                    });
+                                    const result = await cloudinary.uploader.upload(newImage.filepath,
+                                        { folder: 'products' }
+                                    );
+
+                                    if (result) {
+                                        let { images } = await productModel.findById(productId);
+                                        let index = images.findIndex(img => img === oldImage);
+                                        images[index] = result.url;
+                                        await productModel.findByIdAndUpdate(productId, { images });
+
+                                        const product = await productModel.findById(productId);
+                                        response(res, 200, { product, message: 'Product Image Updated' });
+                                    } else {
+                                        response(res, 404, { error: 'Image Upload Fails' });
+                                    }
+                                }
+                            })
+
+
+                        } catch (error) {
+                            console.log(error);
+                            response(res, 500, { error: 'Internal Servel Error' });
+
+                        }
+                    }
                     if (result) {
                         let { images } = await productModel.findById(productId);
                         let index = images.findIndex(img => img === oldImage);
