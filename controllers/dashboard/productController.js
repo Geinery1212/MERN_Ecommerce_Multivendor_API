@@ -10,7 +10,7 @@ class productController {
         form.parse(req, async (err, fields, files) => {
             const { id } = req;
             if (err) {
-                response(res, 404, { error: 'Something went wrong' })
+                response(res, 400, { error: 'Something went wrong' })
             } else {
                 let {
                     name, description, discount, price, brand,
@@ -98,6 +98,86 @@ class productController {
         } catch (error) {
             console.log(error);
             response(res, 500, { error: 'Internal Servel Error' });
+        }
+    }
+    getProduct = async (req, res) => {
+        const { productId } = req.params;
+        try {
+            const product = await productModel.findById(productId);
+            if (product) {
+                response(res, 200, { product });
+            } else {
+                response(res, 404, { error: 'Product Not Found' });
+            }
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+        }
+    }
+    update = async (req, res) => {
+        try {
+            let {
+                name, description, discount, price, brand,
+                stock, category, productId
+            } = req.body;
+            name = name.trim();
+            let slug = name.split(' ').join('-');
+            await productModel.findByIdAndUpdate(productId, {
+                name, description, discount, price, brand,
+                stock, slug, category
+            });
+            const product = await productModel.findById(productId);
+            response(res, 200, { product, message: 'Product Updated Successfully' });
+
+
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+
+        }
+    }
+
+    updateImage = async (req, res) => {
+        try {
+            const form = formidable({ multiples: true });
+
+            form.parse(req, async (err, fields, files) => {
+                // console.log(fields);
+                // console.log(files);
+                if (err) {
+                    response(res, 400, { error: 'Something went wrong' })
+                } else {
+                    let { oldImage, productId } = fields;
+                    let { newImage } = files;
+                    cloudinary.config({
+                        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                        api_key: process.env.CLOUDINARY_API_KEY,
+                        api_secret: process.env.CLOUDINARY_SECRET_KEY,
+                        secure: true
+                    });
+                    const result = await cloudinary.uploader.upload(newImage.filepath,
+                        { folder: 'products' }
+                    );
+
+                    if (result) {
+                        let { images } = await productModel.findById(productId);
+                        let index = images.findIndex(img => img === oldImage);
+                        images[index] = result.url;
+                        await productModel.findByIdAndUpdate(productId, { images });
+
+                        const product = await productModel.findById(productId);
+                        response(res, 200, { product, message: 'Product Image Updated' });
+                    } else {
+                        response(res, 404, { error: 'Image Upload Fails' });
+                    }
+                }
+            })
+
+
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+
         }
     }
 }
