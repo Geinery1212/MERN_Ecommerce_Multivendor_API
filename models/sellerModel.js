@@ -39,4 +39,8 @@ const sellerSchema = new Schema({
         default: {}
     }
 },{timestamps: true});
+
+sellerSchema.index({
+    name: 'text'
+});
 module.exports = model('sellers', sellerSchema);

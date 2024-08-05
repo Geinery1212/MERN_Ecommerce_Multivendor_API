@@ -169,9 +169,9 @@ class authController {
 
     addShopData = async (req, res) => {
         try {
-            const { shop, state, district, subdistrict } = req.body;
+            const { shopName, state, district, subdistrict } = req.body;
             const { id } = req;
-            await sellerModel.findByIdAndUpdate(id, { shopInfo: { shop, state, district, subdistrict } });
+            await sellerModel.findByIdAndUpdate(id, { shopInfo: { shopName, state, district, subdistrict } });
             const userInfo = await sellerModel.findById(id);
             response(res, 200, { userInfo, message: 'Shop Info Added Successfully' });
 
