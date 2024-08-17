@@ -9,7 +9,7 @@ const { dbConnect } = require('./utilities/db');
 const port = process.env.PORT;
 
 app.use(cors({
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true
 }));
 app.use(bodyParser.json());
@@ -21,5 +21,6 @@ app.use('/api', require('./routes/authRoutes'));
 app.use('/api', require('./routes/dashboard/categoryRoutes'));
 app.use('/api', require('./routes/dashboard/productRoutes'));
 app.use('/api', require('./routes/dashboard/sellerRoutes'));
+app.use('/api/client', require('./routes/client/homeRoutes'));
 //Initialize the port and listen
 app.listen(port, () => console.log(`Server is running on port ${port}`));
