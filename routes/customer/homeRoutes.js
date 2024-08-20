@@ -1,4 +1,4 @@
-const homeController = require('../../controllers/client/homeController');
+const homeController = require('../../controllers/customer/homeController');
 
 const router = require('express').Router();
 router.get('/get-categories', homeController.getAllCategories);
