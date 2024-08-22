@@ -26,14 +26,19 @@ class authController {
                 name: name.trim(),
                 email: email.trim(),
                 password: hashedPassword,
-                method: 'manually'                
+                method: 'manually'
             });
 
             // Create related customer record, for the chat
             await sellerCustomerModel.create({ myId: customer._id });
 
             // Generate authentication token
-            const token = await createToken({ id: customer._id });
+            const token = await createToken({
+                id: customer._id,
+                name: customer.name,
+                email: customer.email,
+                method: customer.method
+            });
 
             // Set token as a cookie
             res.cookie('customerToken', token, {
@@ -49,25 +54,26 @@ class authController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
-    sellerLogin = async (req, res) => {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return response(res, 400, { error: 'Email and Password are Required' });
-        }
+    customerLogin = async (req, res) => {
         try {
-            const seller = await sellerModel.findOne({ email: email }).select('+password');
-            if (seller) {
-                const match = await bcrypt.compare(password, seller.password);
-                if (match) {
+            const { email, password } = req.body;
+            if (!email || !password) {
+                return response(res, 400, { error: 'Email and Password are Required' });
+            }
+            const customer = await customerModel.findOne({ email: email }).select('+password');
+            if (customer) {
+                const match = await bcrypt.compare(password, customer.password);
+                if (match) {                    
                     const token = await createToken({
-                        id: seller._id,
-                        role: seller.role
+                        id: customer._id,
+                        name: customer.name,
+                        email: customer.email,
+                        method: customer.method
                     });
-                    res.cookie('accessToken', token, {
+                    res.cookie('customerToken', token, {
                         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                     });
                     response(res, 200, { token, message: "Login Success" });
-
                 } else {
                     response(res, 404, { error: "Password Wrong" });
                 }
