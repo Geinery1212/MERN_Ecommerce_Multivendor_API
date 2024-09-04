@@ -1,10 +1,11 @@
 const formidable = require('formidable');
 const cloudinary = require('cloudinary').v2;
 const { response } = require('../../utilities/response');
+const { toCents, toCurrency } = require('../../utilities/myMoney');
 const productModel = require('../../models/productModel');
 
 class productController {
-    add = async (req, res) => {        
+    add = async (req, res) => {
         try {
             const form = formidable({ multiples: true });
             form.parse(req, async (err, fields, files) => {
@@ -51,7 +52,7 @@ class productController {
                             category: category.trim(),
                             description: description.trim(),
                             stock: parseInt(stock),
-                            price: parseInt(price),
+                            price: toCents(price),
                             discount: parseInt(discount),
                             images: allUrlImages
                         });
@@ -125,6 +126,7 @@ class productController {
                 stock, category, productId
             } = req.body;
             name = name.trim();
+            price = toCents(price);
             let slug = name.split(' ').join('-');
             await productModel.findByIdAndUpdate(productId, {
                 name, description, discount, price, brand,

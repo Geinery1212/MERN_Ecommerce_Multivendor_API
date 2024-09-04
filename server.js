@@ -23,5 +23,6 @@ app.use('/api', require('./routes/dashboard/productRoutes'));
 app.use('/api', require('./routes/dashboard/sellerRoutes'));
 app.use('/api/customer', require('./routes/customer/homeRoutes'));
 app.use('/api/customer', require('./routes/customer/authRoutes'));
+app.use('/api/customer', require('./routes/customer/cartRoutes'));
 //Initialize the port and listen
 app.listen(port, () => console.log(`Server is running on port ${port}`));
