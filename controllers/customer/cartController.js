@@ -96,13 +96,9 @@ class cartController {
                         }
                         let withoutComission = 100 - commission;
                         const [d1, d2] = allocate(pri, [commission, withoutComission]);
-                        //TODO: Check if the comission its gonna be subtract
-                        console.log('price before substract', toDecimal(pri));
+                        //TODO: RECheck the comission 
                         pri = subtract(pri, d1);
-                        console.log('price after substract', toDecimal(pri));
-                        console.log('original price', toDecimal(price))
                         price = add(price, multiply(pri, stockProduct[j].quantity));
-                        console.log('original price after add', toDecimal(price))
 
                         p[i] = {
                             sellerId: unique[i],
@@ -138,5 +134,60 @@ class cartController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
+    deleteProduct = async (req, res) => {
+        try {
+            const { id } = req;
+            const { cartId } = req.params;
+            const deletedProduct = await cartModel.findByIdAndDelete(cartId);
+
+            if (!deletedProduct) {
+                return response(res, 404, { error: 'Product not found in cart' });
+            }
+
+            response(res, 200, { message: 'Deleted successfully' });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+
+    quantityInc = async (req, res) => {
+        try {
+            const { cartId } = req.body;
+            const updateCart = await cartModel.findByIdAndUpdate(
+                cartId,
+                { $inc: { quantity: 1 } },
+                { new: true } // Return the updated document
+            );
+
+            if (!updateCart) {
+                return response(res, 404, { message: 'Product Not Found' });
+            }
+
+            response(res, 200, { message: 'Quantity Updated Successfully', cart: updateCart });
+        } catch (error) {
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+
+    quantityDec = async (req, res) => {
+        try {
+            const { cartId } = req.body;
+            const updateCart = await cartModel.findByIdAndUpdate(
+                cartId,
+                { $inc: { quantity: -1 } },
+                { new: true } // Return the updated document
+            );
+
+            if (!updateCart) {
+                return response(res, 404, { message: 'Product Not Found' });
+            }
+
+            response(res, 200, { message: 'Quantity Updated Successfully', cart: updateCart });
+        } catch (error) {
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+
 }
 module.exports = new cartController();

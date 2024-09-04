@@ -37,11 +37,12 @@ class authController {
                 id: customer._id,
                 name: customer.name,
                 email: customer.email,
-                method: customer.method
+                method: customer.method,
+                role: 'customer'
             });
 
             // Set token as a cookie
-            res.cookie('customerToken', token, {
+            res.cookie('accessToken', token, {
                 expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week
                 // httpOnly: true, // Secure cookie
                 // sameSite: 'strict' // CSRF protection
@@ -68,9 +69,10 @@ class authController {
                         id: customer._id,
                         name: customer.name,
                         email: customer.email,
-                        method: customer.method
+                        method: customer.method,
+                        role: 'customer'
                     });
-                    res.cookie('customerToken', token, {
+                    res.cookie('accessToken', token, {
                         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                     });
                     response(res, 200, { token, message: "Login Success" });

@@ -8,12 +8,18 @@ const cookieParser = require('cookie-parser');
 const { dbConnect } = require('./utilities/db');
 const port = process.env.PORT;
 
-app.use(cors({
+const corsOptions = {
     origin: ['http://localhost:3000', 'http://localhost:3001'],
-    credentials: true
-}));
-app.use(bodyParser.json());
-app.use(cookieParser());
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 204 // For legacy browsers (some versions of IE) to avoid CORS errors
+};
+
+app.use(cors(corsOptions));
+app.use(cookieParser()); 
+app.use(bodyParser.json()); // Parse incoming JSON payloads
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 //Connect database
 dbConnect();
 //Add routes
