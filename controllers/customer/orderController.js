@@ -98,5 +98,26 @@ class orderController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     }
+    getOrders = async (req, res) => {
+        try {
+            const { id } = req;
+            const { status } = req.params;
+            let orders = [];
+            if (status !== 'all') {
+                orders = await customerOrder.find({
+                    customerId: id,
+                    delivery_status: status
+                })
+            } else {
+                orders = await customerOrder.find({
+                    customerId: id
+                });
+            }
+            response(res, 200, {orders});
+        } catch (error) {
+            console.log(error);
+            response(res, 500, 'Internal Server Error');
+        }
+    }
 }
 module.exports = new orderController();
