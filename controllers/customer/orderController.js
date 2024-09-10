@@ -89,12 +89,11 @@ class orderController {
                 await cartModel.findByIdAndDelete(cartIds[k]);
             }
             setTimeout(() => {
-                console.log(order.id);
                 this.paymentCheck(order.id)
             }, 15000);
             response(res, 200, { message: "Order Placed Successfully", orderId: order.id });
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response(res, 500, { error: 'Internal Server Error' });
         }
     }
@@ -113,11 +112,33 @@ class orderController {
                     customerId: id
                 });
             }
-            response(res, 200, {orders});
+            response(res, 200, { orders });
         } catch (error) {
-            console.log(error);
+            console.error(error);
             response(res, 500, 'Internal Server Error');
         }
     }
+
+    getOrder = async (req, res) => {
+        try {
+            const { id } = req;
+            const { orderId } = req.params;
+
+            const order = await customerOrder.findOne({
+                _id: orderId,
+                customerId: id
+            });
+
+            if (!order) {
+                response(res, 404, 'Order not found');
+            }
+
+            response(res, 200, { order });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
+        }
+    };
+
 }
 module.exports = new orderController();
