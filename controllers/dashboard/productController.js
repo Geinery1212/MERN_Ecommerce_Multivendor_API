@@ -17,10 +17,10 @@ class productController {
                         name, description, discount, price, brand,
                         stock, shopName, category
                     } = fields;
-                    console.log(files);
+                    // console.log(files);
                     let { images } = files;
                     name = name.trim();
-                    let slug = name.split(' ').join('-');
+                    let slug = this.generateSlug(name);
                     cloudinary.config({
                         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
                         api_key: process.env.CLOUDINARY_API_KEY,
@@ -68,6 +68,19 @@ class productController {
             response(res, 500, { error: 'Internal Servel Error' });
         }
     }
+
+    generateSlug = async (name) => {        
+        let slug = name.trim().toLowerCase().split(' ').join('-');
+        let uniqueSlug = slug;
+        let count = 1;
+    
+        while (await productModel.exists({ slug: uniqueSlug })) {
+            uniqueSlug = `${slug}-${count}`;
+            count++;
+        }
+    
+        return uniqueSlug;
+    };
 
     getAll = async (req, res) => {
         try {

@@ -112,5 +112,48 @@ class homeController {
             response(res, 500, { error: 'Internal Servel Error' });
         }
     }
+    getProductDetails = async (req, res) => {
+        const { slug } = req.params;
+
+        try {
+            const product = await productModel.findOne({ slug });
+            const relatedProducts = await productModel.find({
+                $and: [
+                    {
+                        _id: {
+                            $ne: product.id
+                        }
+                    },
+                    {
+                        category: {
+                            $eq: product.category
+                        }
+                    }
+
+                ]
+            }).limit(12);
+
+            const moreProducts = await productModel.find({
+                $and: [
+                    {
+                        _id: {
+                            $ne: product._id
+                        }
+                    },
+                    {
+                        sellerId: {
+                            $eq: product.sellerId
+                        }
+                    }
+                ]
+            }).limit(3);
+
+            response(res, 200, { product, relatedProducts, moreProducts });
+        } catch (error) {
+            console.error('Error fetching product:', error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    };
+
 }
 module.exports = new homeController();
