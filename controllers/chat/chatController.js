@@ -6,23 +6,24 @@ const sellerCustomerModel = require("../../models/chat/sellerCustomerModel");
 const sellerCustomerMessage = require('../../models/chat/sellerCustomerMsg');
 class chatController {
     addNewFriendSeller = async (req, res) => {
-        const session = await sellerCustomerModel.startSession();
         try {
-            session.startTransaction();
             const { sellerId, userId } = req.body;
-            if (sellerId != '') {                
+
+            if (sellerId) {  //null/undefined check
                 const seller = await sellerModel.findById(sellerId);
                 const user = await customerModel.findById(userId);
+
+                // Check if the seller is already a friend of the user
                 const checkSeller = await sellerCustomerModel.findOne({
                     myId: userId,
                     'myFriends.fdId': sellerId
                 });
-                if (!checkSeller) {                    
+
+                if (!checkSeller) {
                     await sellerCustomerModel.updateOne({
                         myId: userId,
-
                     }, {
-                        $push: {
+                        $addToSet: {  // Use $addToSet to avoid duplicate entries
                             myFriends: {
                                 fdId: sellerId,
                                 name: seller.shopInfo?.shopName,
@@ -32,6 +33,7 @@ class chatController {
                     });
                 }
 
+                // Check if the customer is already a friend of the seller
                 const checkCustomer = await sellerCustomerModel.findOne({
                     myId: sellerId,
                     'myFriends.fdId': userId
@@ -40,13 +42,12 @@ class chatController {
                 if (!checkCustomer) {
                     await sellerCustomerModel.updateOne({
                         myId: sellerId,
-
                     }, {
-                        $push: {
+                        $addToSet: {  // Use $addToSet to avoid duplicate entries
                             myFriends: {
                                 fdId: userId,
                                 name: user.name,
-                                image: ""
+                                image: user.image || ""  // Use the user's image if available
                             }
                         }
                     });
@@ -55,53 +56,77 @@ class chatController {
                 const messages = await sellerCustomerMessage.find({
                     $or: [
                         {
-                            $and: [{
-                                receverId: { $eq: sellerId }
-                            }, {
-                                senderId: {
-                                    $eq: userId
-                                }
-                            }]
+                            $and: [{ receiverId: sellerId }, { senderId: userId }]
                         },
                         {
-                            $and: [{
-                                receverId: { $eq: userId }
-                            }, {
-                                senderId: {
-                                    $eq: sellerId
-                                }
-                            }]
+                            $and: [{ receiverId: userId }, { senderId: sellerId }]
                         }
                     ]
                 });
 
-                const MyFriends = await sellerCustomerModel.findOne({
-                    myId: userId
-                });
-
-                const currentFriend = MyFriends.myFriends.find(s => s.fdId === sellerId);
-                await session.commitTransaction();
+                const MyFriends = await sellerCustomerModel.findOne({ myId: userId });
+                const currentFriend = MyFriends.myFriends.find(s => s.fdId === sellerId);                
                 response(res, 200, {
-                    'myFriends': MyFriends.myFriends,
+                    myFriends: MyFriends.myFriends,
                     currentFriend,
                     messages
                 });
-
             } else {
-                const MyFriends = await sellerCustomerModel.findOne({
-                    myId: userId
-                });
-                await session.commitTransaction();
+                const MyFriends = await sellerCustomerModel.findOne({ myId: userId });
                 response(res, 200, {
-                    MyFriends: MyFriends.myFriends
+                    myFriends: MyFriends.myFriends
                 });
             }
         } catch (error) {
-            await session.abortTransaction();
             console.error(error);
             response(res, 500, 'Internal Server Error');
-        }finally{
-            session.endSession();
+        }
+    };
+
+    sendNewMessageCustomerToSeller = async (req, res) => {
+        try {
+            req.body.userId = req.id;
+            const { userId, newMessageText, sellerId, name } = req.body;
+            const message = await sellerCustomerMessage.create({
+                'senderName': name,
+                'senderId': userId,
+                'receiverId': sellerId,
+                'message': newMessageText
+            });
+
+            //Show the most recent chat //customer
+            let data = await sellerCustomerModel.findOne({ 'myId': userId });
+            let myFriends = data.myFriends;
+            let indexCurrrentFriend = myFriends.findIndex(f => f.fdId === sellerId);
+
+            while (indexCurrrentFriend > 0) {
+                let temp = myFriends[indexCurrrentFriend];
+                myFriends[indexCurrrentFriend] = myFriends[indexCurrrentFriend - 1];
+                myFriends[indexCurrrentFriend - 1] = temp;
+                indexCurrrentFriend--;
+            }
+            await sellerCustomerModel.findOneAndUpdate({ 'myId': userId }, {
+                myFriends
+            });
+
+            //Show the most recent chat //seller
+            let data2 = await sellerCustomerModel.findOne({ 'myId': sellerId });
+            let myFriends2 = data2.myFriends;
+            let indexCurrrentFriend2 = myFriends.findIndex(f => f.fdId === userId);
+
+            while (indexCurrrentFriend2 > 0) {
+                let temp = myFriends2[indexCurrrentFriend2];
+                myFriends2[indexCurrrentFriend2] = myFriends2[indexCurrrentFriend2 - 1];
+                myFriends2[indexCurrrentFriend2 - 1] = temp;
+                indexCurrrentFriend2--;
+            }
+            await sellerCustomerModel.findOneAndUpdate({ 'myId': sellerId }, {
+                'myFriends': myFriends2
+            });            
+            response(res, 200, { message, myFriends });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
         }
     }
 }
