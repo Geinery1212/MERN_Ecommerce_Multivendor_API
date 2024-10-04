@@ -36,10 +36,49 @@ const addUser = (socketId, userInfo) => {
         });
     }
 }
+
+var allSellers = [];
+const addSeller = (socketId, userInfo) => {
+    const check = allSellers.some(u => u.sellerId === userInfo._id);
+    if (!check) {
+        allSellers.push({
+            'sellerId': userInfo._id,
+            socketId,
+            userInfo
+        });
+    }
+}
+
+const findCustomer = async (customerId) => {
+    return allCustomers.find(c => c.customerId === customerId)
+}
+const removeSeller = (socketId) => {
+    allSellers = allSellers.filter(c => c.socketId !== socketId);
+}
+
 io.on('connection', (soc) => {
-    // console.log('Socket is running');s
+    // console.log('Socket is running');
     soc.on('add_user', (userInfo) => {
-        addUser(soc.id, userInfo);    
+        addUser(soc.id, userInfo);
+        io.emit('activeSellers', allSellers);
+    });
+    soc.on('add_seller', (userInfo) => {
+        addSeller(soc.id, userInfo);
+        io.emit('activeSellers', allSellers);
+    });
+    soc.on('send_seller_message',async (msg) => {
+        const customer = await findCustomer(msg.receiverId);
+        // console.log('we are inside send seller messsage', customer, msg.receiverId)
+        // console.log(allCustomers)
+        console.log(customer);
+        if (customer) {
+            console.log(customer);
+            soc.to(customer.socketId).emit('seller_message', msg)
+        }
+    });    
+    soc.on('disconnect', () => {
+        // removeSeller(soc.id);
+        io.emit('activeSellers', allSellers);
     });
 });
 
