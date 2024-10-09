@@ -9,7 +9,6 @@ const { dbConnect } = require('./utilities/db');
 const port = process.env.PORT;
 const socket = require('socket.io');
 const http = require('http');
-const { userInfo } = require('os');
 const server = http.createServer(app);
 const corsOptions = {
     origin: ['http://localhost:3000', 'http://localhost:3001'],
@@ -26,8 +25,9 @@ const io = socket(server, {
     }
 });
 var allCustomers = [];
-const addUser = (socketId, userInfo) => {
+const addCustomer = (socketId, userInfo) => {    
     const check = allCustomers.some(u => u.customerId === userInfo.id);
+    console.log('add customer ===', userInfo.id, check);
     if (!check) {
         allCustomers.push({
             'customerId': userInfo.id,
@@ -40,6 +40,7 @@ const addUser = (socketId, userInfo) => {
 var allSellers = [];
 const addSeller = (socketId, userInfo) => {
     const check = allSellers.some(u => u.sellerId === userInfo._id);
+    console.log('add seller ===', userInfo._id, check);
     if (!check) {
         allSellers.push({
             'sellerId': userInfo._id,
@@ -47,37 +48,49 @@ const addSeller = (socketId, userInfo) => {
             userInfo
         });
     }
+    console.log(allSellers);
 }
 
 const findCustomer = async (customerId) => {
     return allCustomers.find(c => c.customerId === customerId)
 }
-const removeSeller = (socketId) => {
+const findSeller = async (sellerId) => {
+    return allSellers.find(c => c.sellerId === sellerId)
+}
+const removeUsers = (socketId) => {
     allSellers = allSellers.filter(c => c.socketId !== socketId);
+    allCustomers = allCustomers.filter(c => c.socketId !== socketId);
 }
 
 io.on('connection', (soc) => {
     // console.log('Socket is running');
-    soc.on('add_user', (userInfo) => {
-        addUser(soc.id, userInfo);
+    soc.on('add_customer', (userInfo) => {        
+        addCustomer(soc.id, userInfo);
         io.emit('activeSellers', allSellers);
     });
     soc.on('add_seller', (userInfo) => {
         addSeller(soc.id, userInfo);
         io.emit('activeSellers', allSellers);
     });
-    soc.on('send_seller_message',async (msg) => {
+    soc.on('send_seller_message', async (msg) => {
+        console.error('send seller message', msg.receiverId, allCustomers);
+
         const customer = await findCustomer(msg.receiverId);
-        // console.log('we are inside send seller messsage', customer, msg.receiverId)
-        // console.log(allCustomers)
-        console.log(customer);
-        if (customer) {
-            console.log(customer);
+        if (customer) {            
+            console.log('New message to send TO CUSTOMER ', msg);
             soc.to(customer.socketId).emit('seller_message', msg)
         }
-    });    
+    });
+
+    soc.on('send_customer_message', async (msg) => {
+        const seller = await findSeller(msg.receiverId);        
+        if (seller && msg) {            
+            console.log('New message to send TO SELLER', msg, seller.socketId)
+            soc.to(seller.socketId).emit('customer_message', msg)
+        }
+    });
     soc.on('disconnect', () => {
-        // removeSeller(soc.id);
+        removeUsers(soc.id);
         io.emit('activeSellers', allSellers);
     });
 });

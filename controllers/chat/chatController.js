@@ -130,7 +130,8 @@ class chatController {
             response(res, 500, 'Internal Server Error');
         }
     }
-    sendNewMessageSellerToCustomer = async (req, res) => {        
+    sendNewMessageSellerToCustomer = async (req, res) => {   
+        // console.log(req.body);     
         try {
             req.body.sellerId = req.id;
             const { customerId, newMessageText, sellerId, name } = req.body;
