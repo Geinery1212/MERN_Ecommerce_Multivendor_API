@@ -27,7 +27,6 @@ const io = socket(server, {
 var allCustomers = [];
 const addCustomer = (socketId, userInfo) => {    
     const check = allCustomers.some(u => u.customerId === userInfo.id);
-    console.log('add customer ===', userInfo.id, check);
     if (!check) {
         allCustomers.push({
             'customerId': userInfo.id,
@@ -40,7 +39,6 @@ const addCustomer = (socketId, userInfo) => {
 var allSellers = [];
 const addSeller = (socketId, userInfo) => {
     const check = allSellers.some(u => u.sellerId === userInfo._id);
-    console.log('add seller ===', userInfo._id, check);
     if (!check) {
         allSellers.push({
             'sellerId': userInfo._id,
@@ -72,12 +70,10 @@ io.on('connection', (soc) => {
         addSeller(soc.id, userInfo);
         io.emit('activeSellers', allSellers);
     });
-    soc.on('send_seller_message', async (msg) => {
-        console.error('send seller message', msg.receiverId, allCustomers);
-
+    soc.on('send_seller_message', async (msg) => {    
         const customer = await findCustomer(msg.receiverId);
         if (customer) {            
-            console.log('New message to send TO CUSTOMER ', msg);
+            // console.log('New message to send TO CUSTOMER ', msg);
             soc.to(customer.socketId).emit('seller_message', msg)
         }
     });
@@ -85,7 +81,7 @@ io.on('connection', (soc) => {
     soc.on('send_customer_message', async (msg) => {
         const seller = await findSeller(msg.receiverId);        
         if (seller && msg) {            
-            console.log('New message to send TO SELLER', msg, seller.socketId)
+            // console.log('New message to send TO SELLER', msg, seller.socketId)
             soc.to(seller.socketId).emit('customer_message', msg)
         }
     });

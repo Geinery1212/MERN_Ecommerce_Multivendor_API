@@ -64,7 +64,7 @@ class authController {
             const customer = await customerModel.findOne({ email: email }).select('+password');
             if (customer) {
                 const match = await bcrypt.compare(password, customer.password);
-                if (match) {                    
+                if (match) {
                     const token = await createToken({
                         id: customer._id,
                         name: customer.name,
@@ -82,6 +82,17 @@ class authController {
             } else {
                 response(res, 404, { error: "Email not Found" });
             }
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    };
+    customerLogout = async (req, res) => {
+        try {
+            res.cookie('accessToken', "", {
+                expires: new Date(Date.now())
+            })
+            response(res, 200, { message: 'Logout Success' });
         } catch (error) {
             console.error(error);
             response(res, 500, { error: 'Internal Server Error' });
