@@ -25,6 +25,8 @@ const io = socket(server, {
     }
 });
 var allCustomers = [];
+var allSellers = [];
+var allAdmins = [];
 const addCustomer = (socketId, userInfo) => {    
     const check = allCustomers.some(u => u.customerId === userInfo.id);
     if (!check) {
@@ -36,7 +38,6 @@ const addCustomer = (socketId, userInfo) => {
     }
 }
 
-var allSellers = [];
 const addSeller = (socketId, userInfo) => {
     const check = allSellers.some(u => u.sellerId === userInfo._id);
     if (!check) {
@@ -45,8 +46,18 @@ const addSeller = (socketId, userInfo) => {
             socketId,
             userInfo
         });
-    }
-    console.log(allSellers);
+    }    
+}
+
+const addAdmin = (socketId, userInfo) => {
+    const check = allSellers.some(u => u.adminId === userInfo._id);
+    if (!check) {
+        allAdmins.push({
+            'adminId': userInfo._id,
+            socketId,
+            userInfo
+        });
+    }    
 }
 
 const findCustomer = async (customerId) => {
@@ -55,39 +66,68 @@ const findCustomer = async (customerId) => {
 const findSeller = async (sellerId) => {
     return allSellers.find(c => c.sellerId === sellerId)
 }
+
+const findAdmin = async (adminId) => {
+    return allAdmins.find(c => c.adminId === adminId)
+}
 const removeUsers = (socketId) => {
     allSellers = allSellers.filter(c => c.socketId !== socketId);
     allCustomers = allCustomers.filter(c => c.socketId !== socketId);
+    allAdmins = allAdmins.filter(c => c.socketId !== socketId);
 }
 
 io.on('connection', (soc) => {
     // console.log('Socket is running');
     soc.on('add_customer', (userInfo) => {        
         addCustomer(soc.id, userInfo);
+        io.emit('activeCustomers', allCustomers);
         io.emit('activeSellers', allSellers);
     });
     soc.on('add_seller', (userInfo) => {
         addSeller(soc.id, userInfo);
-        io.emit('activeSellers', allSellers);
+        io.emit('activeCustomers', allCustomers);
+        io.emit('activeSellers', allSellers);        
+        io.emit('activeAdmins', allAdmins);        
     });
+    soc.on('add_admin', (userInfo) => {
+        addAdmin(soc.id, userInfo);        
+        io.emit('activeSellers', allSellers);  
+        io.emit('activeAdmins', allAdmins);              
+    });
+
     soc.on('send_seller_message', async (msg) => {    
         const customer = await findCustomer(msg.receiverId);
+        const admin = await findAdmin(msg.receiverId);
         if (customer) {            
-            // console.log('New message to send TO CUSTOMER ', msg);
+            // Emit message to the customer
             soc.to(customer.socketId).emit('seller_message', msg)
+        }else if(admin){
+            // Emit message to the admin
+            soc.to(admin.socketId).emit('seller_message', msg)
         }
     });
 
     soc.on('send_customer_message', async (msg) => {
         const seller = await findSeller(msg.receiverId);        
         if (seller && msg) {            
-            // console.log('New message to send TO SELLER', msg, seller.socketId)
+            // Emit message to the seller
             soc.to(seller.socketId).emit('customer_message', msg)
         }
     });
+
+    soc.on('send_admin_message', async (msg) => {
+        const seller = await findSeller(msg.receiverId);        
+        if (seller && msg) {            
+            // Emit message to the seller
+            soc.to(seller.socketId).emit('admin_message', msg)
+        }
+    });
+
     soc.on('disconnect', () => {
         removeUsers(soc.id);
+        io.emit('activeCustomers', allCustomers);
         io.emit('activeSellers', allSellers);
+        io.emit('activeAdmins', allAdmins);        
     });
 });
 

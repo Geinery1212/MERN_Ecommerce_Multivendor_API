@@ -1,9 +1,11 @@
 const { response } = require("../../utilities/response");
+const adminModel = require("../../models/adminModel");
 const sellerModel = require("../../models/sellerModel");
-const userModel = require("../../models/customerModel");
 const customerModel = require("../../models/customerModel");
 const sellerCustomerModel = require("../../models/chat/sellerCustomerModel");
 const sellerCustomerMessage = require('../../models/chat/sellerCustomerMsg');
+const adminSellerModel = require("../../models/chat/adminSellerModel");
+const sellerAdminMessage = require('../../models/chat/sellerAdminMsg');
 class chatController {
     addNewFriendSeller = async (req, res) => {
         try {
@@ -130,7 +132,7 @@ class chatController {
             response(res, 500, 'Internal Server Error');
         }
     }
-    sendNewMessageSellerToCustomer = async (req, res) => {   
+    sendNewMessageSellerToCustomer = async (req, res) => {
         // console.log(req.body);     
         try {
             req.body.sellerId = req.id;
@@ -176,11 +178,11 @@ class chatController {
             console.error(error);
             response(res, 500, 'Internal Server Error');
         }
-        
+
     }
-    getCustomerFriends = async (req, res) => {
-        const {sellerId, customerId} = req.params;        
-        try {            
+    getCustomerSellerFriends = async (req, res) => {
+        const { sellerId, customerId } = req.params;
+        try {
 
             if (customerId) {  //null/undefined check    
                 const messages = await sellerCustomerMessage.find({
@@ -211,7 +213,216 @@ class chatController {
             console.error(error);
             response(res, 500, 'Internal Server Error');
         }
-                
+
+    }
+
+    getSellerAdminFriends = async (req, res) => {
+        const { adminId, sellerId } = req.params;
+        try {
+            if (sellerId) {  //null/undefined check    
+                const messages = await sellerAdminMessage.find({
+                    $or: [
+                        {
+                            $and: [{ receiverId: sellerId }, { senderId: adminId }]
+                        },
+                        {
+                            $and: [{ receiverId: adminId }, { senderId: sellerId }]
+                        }
+                    ]
+                });
+
+                const allSellers = await sellerModel.find();
+                let MyFriends = await adminSellerModel.findOne({ myId: adminId });
+                if (!MyFriends) {
+                    //if there is no friend, add them
+                    let tempFriends = [];
+                    for (let i = 0; allSellers.length > i; i++) {
+                        let tempObj = {
+                            'fdId': allSellers[i]._id.toString(),
+                            'name': allSellers[i].name,
+                            'image': allSellers[i].image,
+                        }
+                        tempFriends.push(tempObj);
+                    }
+                    await adminSellerModel.create({
+                        myId: adminId,
+                        'myFriends': tempFriends
+                    });
+
+                } else {
+                    //Check if there is a new seller who is not a friend yet
+                    let tempFriends = MyFriends.myFriends;
+                    let update = false;
+                    for (let i = 0; allSellers.length > i; i++) {
+                        if (!(tempFriends.some((t) => t.fdId === allSellers[i]._id.toString()))) {
+                            update = true;
+                            tempFriends.push({
+                                'fdId': allSellers[i]._id.toString(),
+                                'name': allSellers[i].name,
+                                'image': allSellers[i].image
+                            });
+                        }
+
+                    }
+                    if (update) {
+                        await adminSellerModel.findByIdAndUpdate(adminId, {
+                            'myFriends': tempFriends
+                        });
+                    }
+                }
+                MyFriends = await adminSellerModel.findOne({ myId: adminId });
+                const currentFriend = MyFriends.myFriends.find(s => s.fdId === sellerId);
+                response(res, 200, {
+                    myFriends: MyFriends.myFriends,
+                    currentFriend,
+                    messages
+                });
+            } else {
+                const allSellers = await sellerModel.find();
+                let MyFriends = await adminSellerModel.findOne({ myId: adminId });
+                if (!MyFriends) {
+                    //if there is no friend, add them
+                    let tempFriends = [];
+                    for (let i = 0; allSellers.length > i; i++) {
+                        let tempObj = {
+                            'fdId': allSellers[i]._id.toString(),
+                            'name': allSellers[i].name,
+                            'image': allSellers[i].image,
+                        }
+                        tempFriends.push(tempObj);
+                    }
+                    await adminSellerModel.create({
+                        myId: adminId,
+                        'myFriends': tempFriends
+                    });
+
+                } else {
+                    //Check if there is a new seller who is not a friend yet
+                    let tempFriends = MyFriends.myFriends;
+                    let update = false;
+                    for (let i = 0; allSellers.length > i; i++) {
+                        if (!(tempFriends.some((t) => t.fdId === allSellers[i]._id.toString()))) {
+                            update = true;
+                            tempFriends.push({
+                                'fdId': allSellers[i]._id.toString(),
+                                'name': allSellers[i].name,
+                                'image': allSellers[i].image
+                            });
+                        }
+
+                    }
+                    if (update) {
+                        await adminSellerModel.findByIdAndUpdate(adminId, {
+                            'myFriends': tempFriends
+                        });
+                    }
+                }
+                MyFriends = await adminSellerModel.findOne({ myId: adminId });
+                response(res, 200, {
+                    myFriends: MyFriends.myFriends
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
+        }
+
+    }
+
+    sendNewMessageSellerToAdmin = async (req, res) => {
+        try {
+            const admins = await adminModel.find();
+            req.body.adminId = admins[0]._id;
+            req.body.sellerId = req.id;
+            const { sellerId, newMessageText, adminId, name } = req.body;
+            const message = await sellerAdminMessage.create({
+                'senderName': name,
+                'senderId': sellerId,
+                'receiverId': adminId,
+                'message': newMessageText
+            });
+
+            //Show the most recent chat //admin
+            let data = await adminSellerModel.findOne({ 'myId': adminId });
+            let myFriends = data.myFriends;
+            let indexCurrrentFriend = myFriends.findIndex(f => f.fdId === sellerId);
+
+            while (indexCurrrentFriend > 0) {
+                let temp = myFriends[indexCurrrentFriend];
+                myFriends[indexCurrrentFriend] = myFriends[indexCurrrentFriend - 1];
+                myFriends[indexCurrrentFriend - 1] = temp;
+                indexCurrrentFriend--;
+            }
+            await adminSellerModel.findOneAndUpdate({ 'myId': adminId }, {
+                'myFriends': myFriends
+            });
+            response(res, 200, { message, myFriends });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
+        }
+    }
+
+    getMessagesSellerToAdmin = async (req, res) => {
+        try {
+            const admins = await adminModel.find();
+            const adminId = admins[0]._id;
+            const sellerId = req.id;
+            const messages = await sellerAdminMessage.find({
+                $or: [
+                    {
+                        $and: [{ receiverId: sellerId }, { senderId: adminId }]
+                    },
+                    {
+                        $and: [{ receiverId: adminId }, { senderId: sellerId }]
+                    }
+                ]
+            });
+            const currentFriend = {
+                'fdId': admins[0]._id.toString(),
+                'name': admins[0].name,
+                'image': admins[0].image,
+            }
+            response(res, 200, {
+                currentFriend,
+                messages
+            });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
+        }
+    }
+
+    sendNewMessageAdminToSeller = async (req, res) => {
+        try {
+            req.body.adminId = req.id;
+            const { sellerId, newMessageText, adminId, name } = req.body;
+            const message = await sellerAdminMessage.create({
+                'senderName': name,
+                'senderId': adminId,
+                'receiverId': sellerId,
+                'message': newMessageText
+            });
+
+            //Show the most recent chat //admin
+            let data = await adminSellerModel.findOne({ 'myId': adminId });
+            let myFriends = data.myFriends;
+            let indexCurrrentFriend = myFriends.findIndex(f => f.fdId === sellerId);
+
+            while (indexCurrrentFriend > 0) {
+                let temp = myFriends[indexCurrrentFriend];
+                myFriends[indexCurrrentFriend] = myFriends[indexCurrrentFriend - 1];
+                myFriends[indexCurrrentFriend - 1] = temp;
+                indexCurrrentFriend--;
+            }
+            await adminSellerModel.findOneAndUpdate({ 'myId': adminId }, {
+                'myFriends': myFriends
+            });
+            response(res, 200, { message, myFriends });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, 'Internal Server Error');
+        }
     }
 }
 module.exports = new chatController();
