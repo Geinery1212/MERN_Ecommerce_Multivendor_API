@@ -89,7 +89,7 @@ class authController {
     };
     customerLogout = async (req, res) => {
         try {
-            res.cookie('accessToken', "", {
+            res.cookie('accessToken', null, {
                 expires: new Date(Date.now())
             })
             response(res, 200, { message: 'Logout Success' });

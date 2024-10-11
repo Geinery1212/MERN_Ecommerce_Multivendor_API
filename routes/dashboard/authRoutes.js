@@ -8,4 +8,6 @@ router.post('/seller-register', authController.sellerRegister);
 router.post('/seller-login', authController.sellerLogin);
 router.post('/profile-image-update', authMiddleware, authController.profileImageUpload);
 router.post('/add-shop-data', authMiddleware, authController.addShopData);
+router.get('/dashboard/logout', authMiddleware, authController.logout);
+
 module.exports = router;

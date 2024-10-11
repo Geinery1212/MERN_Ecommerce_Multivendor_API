@@ -180,5 +180,17 @@ class authController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
+
+    logout = async (req, res) => {
+        try {
+            res.cookie('accessToken', null, {
+                expires: new Date(Date.now())
+            })
+            response(res, 200, { message: 'Logout Success' });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    };
 }
 module.exports = new authController();
