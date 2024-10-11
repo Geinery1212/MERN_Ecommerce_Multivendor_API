@@ -1,14 +1,14 @@
 const { response } = require('../../utilities/response');
 const sellerModel = require('../../models/sellerModel');
 class sellerController {
-    getAll = async (req, res) => {
+    getAllPeding = async (req, res) => {
         try {
             const { page, perPage, searchValue } = req.query;
             let skipPage = '';
             if (page && perPage) {
                 skipPage = parseInt(perPage) * (parseInt(page) - 1);
             }
-            if (searchValue && page && searchValue) {
+            if (searchValue && page && perPage) {
                 const sellers = await sellerModel.find({
                     $text: { $search: searchValue }, status: 'pending'
                 }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
@@ -25,6 +25,109 @@ class sellerController {
             } else {
                 const sellers = await sellerModel.find({ status: 'pending' }).sort({ createdAt: -1 });
                 const totalSellers = await sellerModel.find({ status: 'pending' }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            }
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+        }
+    }
+
+    getAllActive = async (req, res) => {
+        try {
+            const { page, perPage, searchValue } = req.query;
+            let skipPage = '';
+            if (page && perPage) {
+                skipPage = parseInt(perPage) * (parseInt(page) - 1);
+            }
+            if (searchValue && page && perPage) {
+                const sellers = await sellerModel.find({
+                    $and: [
+                        { status: 'active' },
+                        {
+                            $or: [
+                                { $text: { $search: searchValue } },
+                                { name: { $regex: searchValue, $options: 'i' } },
+                                { email: { $regex: searchValue, $options: 'i' } }
+                            ]
+                        }
+                    ]
+                }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({
+                    $and: [
+                        { status: 'active' },
+                        {
+                            $or: [
+                                { $text: { $search: searchValue } },
+                                { name: { $regex: searchValue, $options: 'i' } },
+                                { email: { $regex: searchValue, $options: 'i' } }
+                            ]
+                        }
+                    ]
+                }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            } else if (searchValue === '' && page && perPage) {
+                const sellers = await sellerModel.find({ status: 'active' }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({ status: 'active' }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            } else {
+                const sellers = await sellerModel.find({ status: 'active' }).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({ status: 'active' }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            }
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Servel Error' });
+        }
+    }
+
+
+    getAllDeactive = async (req, res) => {
+        try {
+            const { page, perPage, searchValue } = req.query;
+            let skipPage = '';
+            if (page && perPage) {
+                skipPage = parseInt(perPage) * (parseInt(page) - 1);
+            }
+            if (searchValue && page && perPage) {
+                const sellers = await sellerModel.find({
+                    $and: [
+                        { status: 'deactive' },
+                        {
+                            $or: [
+                                { $text: { $search: searchValue } },
+                                { name: { $regex: searchValue, $options: 'i' } },
+                                { email: { $regex: searchValue, $options: 'i' } }
+                            ]
+                        }
+                    ]
+                }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({
+                    $and: [
+                        { status: 'deactive' },
+                        {
+                            $or: [
+                                { $text: { $search: searchValue } },
+                                { name: { $regex: searchValue, $options: 'i' } },
+                                { email: { $regex: searchValue, $options: 'i' } }
+                            ]
+                        }
+                    ]
+                }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            } else if (searchValue === '' && page && perPage) {
+                const sellers = await sellerModel.find({ status: 'deactive' }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({ status: 'deactive' }).countDocuments();
+
+                response(res, 200, { sellers, totalSellers });
+            } else {
+                const sellers = await sellerModel.find({ status: 'deactive' }).sort({ createdAt: -1 });
+                const totalSellers = await sellerModel.find({ status: 'deactive' }).countDocuments();
 
                 response(res, 200, { sellers, totalSellers });
             }

@@ -38,9 +38,17 @@ const sellerSchema = new Schema({
         type: Object,
         default: {}
     }
-},{timestamps: true});
+}, { timestamps: true });
 
 sellerSchema.index({
-    name: 'text'
+    name: 'text',
+    email: 'text',
+}, {
+    weights: {
+        name: 5,
+        email: 4,
+    }
 });
+sellerSchema.index({ name: 1 });
+sellerSchema.index({ email: 1 });
 module.exports = model('sellers', sellerSchema);
