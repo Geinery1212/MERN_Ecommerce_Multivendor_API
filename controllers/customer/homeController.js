@@ -11,7 +11,7 @@ class homeController {
             response(res, 200, { categories });
         } catch (error) {
             console.log(error);
-            response(res, 500, { error: 'Internal Servel Error' });
+            response(res, 500, { 'error': 'Internal Server Error' });
         }
     }
     formatProduct = (products) => {
@@ -60,7 +60,7 @@ class homeController {
 
         } catch (error) {
             console.log(error);
-            response(res, 500, { error: 'Internal Servel Error' });
+            response(res, 500, { 'error': 'Internal Server Error' });
         }
     }
 
@@ -87,7 +87,7 @@ class homeController {
             });
         } catch (error) {
             console.log(error);
-            response(res, 500, { error: 'Internal Servel Error' });
+            response(res, 500, { 'error': 'Internal Server Error' });
         }
     }
 
@@ -109,7 +109,7 @@ class homeController {
             })
         } catch (error) {
             console.log(error);
-            response(res, 500, { error: 'Internal Servel Error' });
+            response(res, 500, { 'error': 'Internal Server Error' });
         }
     }
     getProductDetails = async (req, res) => {

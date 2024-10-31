@@ -162,7 +162,7 @@ class authController {
             })
         } catch (error) {
             console.log(error);
-            response(res, 500, { error: 'Internal Servel Error' });
+            response(res, 500, { 'error': 'Internal Server Error' });
 
         }
     }

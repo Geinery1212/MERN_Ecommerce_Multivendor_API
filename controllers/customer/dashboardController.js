@@ -26,7 +26,7 @@ class dashboardController {
             })
         } catch (error) {
             console.log(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { 'error': 'Internal Server Error' });
         }
     }
 }
