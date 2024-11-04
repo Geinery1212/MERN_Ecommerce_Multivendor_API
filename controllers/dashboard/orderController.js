@@ -68,7 +68,7 @@ class orderController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -118,7 +118,7 @@ class orderController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -153,7 +153,7 @@ class orderController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
     updateOrderStatusAdmin = async (req, res) => {
@@ -170,7 +170,7 @@ class orderController {
                 response(res, 200, { message: 'Status Updated Sucessfully', order: updatedOrder });
             }
         } catch (error) {
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
 
         }
 
@@ -192,13 +192,13 @@ class orderController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
     updateOrderStatusSeller = async (req, res) => {
         try {
             if (req.role !== 'seller') {
-                return response(res, 403, { 'error': 'Unauthorized' });
+                return response(res, 403, { error: 'Unauthorized' });
             }
 
             const { orderId } = req.params;
@@ -217,7 +217,7 @@ class orderController {
 
             response(res, 200, { message: 'Status Updated Successfully', order: updatedOrder });
         } catch (error) {
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     };
 

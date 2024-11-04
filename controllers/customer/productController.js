@@ -34,7 +34,7 @@ class productController {
 
         } catch (error) {
             console.error(error)
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -102,7 +102,7 @@ class productController {
 
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 }

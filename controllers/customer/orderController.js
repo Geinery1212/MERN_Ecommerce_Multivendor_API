@@ -115,7 +115,7 @@ class orderController {
             response(res, 200, { orders });
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -136,7 +136,7 @@ class orderController {
             response(res, 200, { order });
         } catch (error) {
             console.error(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     };
 

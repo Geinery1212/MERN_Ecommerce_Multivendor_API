@@ -37,7 +37,7 @@ class categoryController {
                         response(res, 404, { error: 'Error Uploading Image' });
                     }
                 } catch (error) {
-                    response(res, 500, { 'error': 'Internal Server Error' });
+                    response(res, 500, { error: 'Internal Server Error' });
                 }
             }
         });
@@ -74,7 +74,7 @@ class categoryController {
             }
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 }

@@ -59,13 +59,13 @@ class productController {
                         response(res, 201, { category, message: 'Product Added Successfully' })
                     } catch (error) {
                         console.error(error);
-                        response(res, 500, { 'error': 'Internal Server Error' });
+                        response(res, 500, { error: 'Internal Server Error' });
                     }
                 }
             })
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -115,7 +115,7 @@ class productController {
             }
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
     getProduct = async (req, res) => {
@@ -129,7 +129,7 @@ class productController {
             }
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
     update = async (req, res) => {
@@ -151,7 +151,7 @@ class productController {
 
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
 
         }
     }
@@ -216,7 +216,7 @@ class productController {
 
                         } catch (error) {
                             console.log(error);
-                            response(res, 500, { 'error': 'Internal Server Error' });
+                            response(res, 500, { error: 'Internal Server Error' });
 
                         }
                     }
@@ -237,7 +237,7 @@ class productController {
 
         } catch (error) {
             console.log(error);
-            response(res, 500, { 'error': 'Internal Server Error' });
+            response(res, 500, { error: 'Internal Server Error' });
 
         }
     }

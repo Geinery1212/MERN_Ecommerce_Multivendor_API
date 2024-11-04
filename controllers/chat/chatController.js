@@ -81,7 +81,7 @@ class chatController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
     };
 
@@ -129,7 +129,7 @@ class chatController {
             response(res, 200, { message, myFriends });
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
     sendNewMessageSellerToCustomer = async (req, res) => {
@@ -176,7 +176,7 @@ class chatController {
             response(res, 200, { message, 'myFriends': myFriends2 });
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
 
     }
@@ -211,7 +211,7 @@ class chatController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
 
     }
@@ -324,7 +324,7 @@ class chatController {
             }
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
 
     }
@@ -359,7 +359,7 @@ class chatController {
             response(res, 200, { message, myFriends });
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -389,7 +389,7 @@ class chatController {
             });
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 
@@ -421,7 +421,7 @@ class chatController {
             response(res, 200, { message, myFriends });
         } catch (error) {
             console.error(error);
-            response(res, 500, 'Internal Server Error');
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 }
