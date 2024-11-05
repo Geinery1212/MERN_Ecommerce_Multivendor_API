@@ -15,8 +15,8 @@ class paymentController {
                 const account = await stripe.accounts.create({ type: 'express' })
                 const accountLink = await stripe.accountLinks.create({
                     account: account.id,
-                    refresh_url: 'http://localhost:3000/refresh',
-                    return_url: `http://localhost:3000/success?activeCode=${uid}`,
+                    refresh_url: `${process.env.BASE_URL_SELLER_SIDE}/refresh`,
+                    return_url: `${process.env.BASE_URL_SELLER_SIDE}/success?activeCode=${uid}`,
                     type: 'account_onboarding'
                 });
 
@@ -30,8 +30,8 @@ class paymentController {
                 const account = await stripe.accounts.create({ type: 'express' });
                 const accountLink = await stripe.accountLinks.create({
                     account: account.id,
-                    refresh_url: 'http://localhost:3000/refresh',
-                    return_url: `http://localhost:3000/success?activeCode=${uid}`,
+                    refresh_url: `${process.env.BASE_URL_SELLER_SIDE}/refresh`,
+                    return_url: `${process.env.BASE_URL_SELLER_SIDE}/success?activeCode=${uid}`,
                     type: 'account_onboarding'
                 });
                 await stripeModel.create({
@@ -63,7 +63,26 @@ class paymentController {
             }
 
         } catch (error) {
-            console.error('Stripe connect account error: ' + error.message);
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+
+    createPaymentOrder = async (req, res) => {
+        const { totalPrice } = req.body
+        try {
+            // console.log("This is the total price: ", totalPrice);
+            const payment = await stripe.paymentIntents.create({
+                amount: totalPrice,
+                currency: 'usd',
+                automatic_payment_methods: {
+                    enabled: true
+                }
+            });
+            // console.log('clientSecret', payment)
+            response(res, 200, { clientSecret: payment.client_secret })
+        } catch (error) {
+            console.error(error);
             response(res, 500, { error: 'Internal Server Error' });
         }
     }

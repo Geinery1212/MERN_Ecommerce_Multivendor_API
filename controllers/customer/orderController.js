@@ -1,11 +1,14 @@
 const moment = require("moment/moment");
-const authOrderModel = require('../../models/authOrder')
-const customerOrder = require('../../models/customerOrder')
+const authOrderModel = require('../../models/authOrder');
+const customerOrder = require('../../models/customerOrder');
 const cartModel = require('../../models/cartModel')
 const { response } = require('../../utilities/response');
-
+const { Types } = require('mongoose');
+const { ObjectId } = Types;
 const { dinero, add, multiply, subtract, toDecimal, allocate, toSnapshot } = require('dinero.js');
 const { USD } = require('@dinero.js/currencies');
+const myShopWallet = require("../../models/myShopWallet");
+const sellerWallet = require("../../models/sellerWallet");
 class orderController {
     paymentCheck = async (id) => {
         try {
@@ -90,7 +93,7 @@ class orderController {
             }
             setTimeout(() => {
                 this.paymentCheck(order.id)
-            }, 15000);
+            }, 150000);
             response(res, 200, { message: "Order Placed Successfully", orderId: order.id });
         } catch (error) {
             console.error(error);
@@ -139,6 +142,42 @@ class orderController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
+    confirmOrder = async (req, res) => {
+        try {
+            const { orderId } = req.params;
+            await customerOrder.findByIdAndUpdate(orderId, { payment_status: 'paid' })
+            await authOrderModel.updateMany({ orderId: new ObjectId(`${orderId}`) }, {
+                payment_status: 'paid', delivery_status: 'pending'
+            })
+            const cuOrder = await customerOrder.findById(orderId);
+
+            const auOrder = await authOrderModel.find({
+                orderId: new ObjectId(`${orderId}`)
+            });
+
+            const time = moment(Date.now()).format('l');
+            const splitTime = time.split('/');                        
+
+            await myShopWallet.create({
+                amount: cuOrder.price,
+                month: splitTime[0],
+                year: splitTime[2]
+            });
+
+            for (let i = 0; i < auOrder.length; i++) {                
+                await sellerWallet.create({
+                    sellerId: auOrder[i].sellerId.toString(),
+                    amount: auOrder[i].price,
+                    month: splitTime[0],
+                    year: splitTime[2]
+                })
+            }
+            response(res, 200, { message: 'Success' });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
 
 }
 module.exports = new orderController();
