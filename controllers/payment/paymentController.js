@@ -3,6 +3,10 @@ const sellerModel = require('../../models/sellerModel');
 const { v4: uuidv4 } = require('uuid');
 const { response } = require('../../utilities/response');
 const stripe = require('stripe')(process.env.STRIPE_KEY);
+const sellerWallet = require('../../models/sellerWallet');
+const withdrawRequestModel = require('../../models/withdrawRequestModel');
+const { Types } = require('mongoose');
+const { ObjectId } = Types;
 
 class paymentController {
     createStripeConnectAccount = async (req, res) => {
@@ -81,6 +85,136 @@ class paymentController {
             });
             // console.log('clientSecret', payment)
             response(res, 200, { clientSecret: payment.client_secret })
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+    getSellerPaymentDetails = async (req, res) => {
+        try {
+            const sellerId = req.id;
+            const payments = await sellerWallet.find({ sellerId });
+            const pendingWithdraws = await withdrawRequestModel.find({
+                $and: [
+                    {
+                        sellerId: {
+                            $eq: sellerId
+                        }
+                    },
+                    {
+                        status: {
+                            $eq: 'pending'
+                        }
+                    }
+                ]
+            });
+
+            const successWithdraws = await withdrawRequestModel.find({
+                $and: [
+                    {
+                        sellerId: {
+                            $eq: sellerId
+                        }
+                    },
+                    {
+                        status: {
+                            $eq: 'success'
+                        }
+                    }
+                ]
+            });
+
+            const pendingAmount = this.sumAmount(pendingWithdraws);
+            const amountWithdrawn = this.sumAmount(successWithdraws);
+            const totalAmount = this.sumAmount(payments);
+
+            let availableAmount = 0;
+
+            if (totalAmount > 0) {
+                availableAmount = totalAmount - (pendingAmount + amountWithdrawn)
+            }
+
+
+            response(res, 200, {
+                totalAmount,
+                pendingAmount,
+                amountWithdrawn,
+                availableAmount,
+                pendingWithdraws,
+                successWithdraws
+            });
+
+
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+    sumAmount = (data) => {
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+            sum = sum + data[i].amount;
+        }
+        return sum
+    }
+    sendWithdrawalRequestSeller = async (req, res) => {
+        try {
+            const sellerId = req.id;
+            const { amount } = req.body;
+
+            const withdrawal = await withdrawRequestModel.create({
+                sellerId,
+                amount: parseInt(amount)
+            });
+
+            response(res, 200, { withdrawal, message: 'Withdrawal Request Send' });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+    getPaymentRequests = async (req, res) => {
+        try {
+            if (req.role !== 'admin') {
+                return response(res, 403, { error: 'Unauthorized' });
+            }
+            const pendingWithdraws = await withdrawRequestModel.find({
+                $and: [
+                    {
+                        status: {
+                            $eq: 'pending'
+                        }
+                    }
+                ]
+            });
+
+            response(res, 200, { pendingWithdraws });
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+
+    confirmPaymentRequest = async (req, res) => {
+        try {
+            if (req.role !== 'admin') {
+                return response(res, 403, { error: 'Unauthorized' });
+            }
+            const { paymentId } = req.body;            
+            const payment = await withdrawRequestModel.findById(paymentId)
+            const { stripeId } = await stripeModel.findOne({
+                sellerId: new ObjectId(`${payment.sellerId}`)
+            })            
+            const balance = await stripe.balance.retrieve();            
+
+            await stripe.transfers.create({
+                amount: payment.amount,
+                currency: 'usd',
+                destination: stripeId
+            });
+
+            await withdrawRequestModel.findByIdAndUpdate(paymentId, { status: 'success' });
+            response(res, 200, { payment, message: 'Request Confirm Success' });
         } catch (error) {
             console.error(error);
             response(res, 500, { error: 'Internal Server Error' });
