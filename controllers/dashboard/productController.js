@@ -20,7 +20,7 @@ class productController {
                     // console.log(files);
                     let { images } = files;
                     name = name.trim();
-                    let slug = this.generateSlug(name);
+                    let slug = await this.generateSlug(name);
                     cloudinary.config({
                         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
                         api_key: process.env.CLOUDINARY_API_KEY,
