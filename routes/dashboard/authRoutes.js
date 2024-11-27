@@ -9,5 +9,6 @@ router.post('/seller-login', authController.sellerLogin);
 router.post('/profile-image-update', authMiddleware, authController.profileImageUpload);
 router.post('/add-shop-data', authMiddleware, authController.addShopData);
 router.get('/dashboard/logout', authMiddleware, authController.logout);
+router.put('/dashboard/change-password', authMiddleware, authController.changePassword);
 
 module.exports = router;

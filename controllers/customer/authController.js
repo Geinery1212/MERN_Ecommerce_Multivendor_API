@@ -98,5 +98,32 @@ class authController {
             response(res, 500, { error: 'Internal Server Error' });
         }
     };
+
+    changePassword = async (req, res) => {
+        try {
+            const { email, old_password, new_password } = req.body;
+            const hashedPassword = await bcrypt.hash(new_password, 10);            
+            if (req.role === 'customer') {
+                const seller = await customerModel.findOne({ email: email, _id: req.id }).select('+password');
+                if (seller) {
+                    const match = await bcrypt.compare(old_password, seller.password);
+                    if (match) {
+                        await customerModel.findByIdAndUpdate(req.id, { password: hashedPassword });
+                        response(res, 200, { message: 'Password Updated Successfuly' });
+                    }else{
+                        response(res, 404, { error: 'The old password is not correct' });
+                    }
+                } else {
+                    response(res, 404, { error: 'User Not Found' });
+                }
+            } else  {
+                response(res, 404, { error: 'User Not Found' });
+            }
+
+        } catch (error) {
+            console.error(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    };
 }
 module.exports = new authController();

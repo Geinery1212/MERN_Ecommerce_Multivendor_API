@@ -69,16 +69,16 @@ class productController {
         }
     }
 
-    generateSlug = async (name) => {        
+    generateSlug = async (name) => {
         let slug = name.trim().toLowerCase().split(' ').join('-');
         let uniqueSlug = slug;
         let count = 1;
-    
+
         while (await productModel.exists({ slug: uniqueSlug })) {
             uniqueSlug = `${slug}-${count}`;
             count++;
         }
-    
+
         return uniqueSlug;
     };
 
@@ -92,24 +92,24 @@ class productController {
             }
             if (searchValue && page && searchValue) {
                 const products = await productModel.find({
-                    $text: { $search: searchValue }, sellerId: sellerId
+                    $text: { $search: searchValue }, sellerId: sellerId, status: 'active'
                 }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
 
                 const totalProducts = await productModel.find({
-                    $text: { $search: searchValue }, sellerId: sellerId
+                    $text: { $search: searchValue }, sellerId: sellerId, status: 'active'
                 }).countDocuments();
 
                 response(res, 200, { products, totalProducts });
             } else if (searchValue === '' && page && perPage) {
-                const products = await productModel.find({ sellerId: sellerId }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+                const products = await productModel.find({ sellerId: sellerId, status: 'active' }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
 
-                const totalProducts = await productModel.find({ sellerId: sellerId }).countDocuments();
+                const totalProducts = await productModel.find({ sellerId: sellerId, status: 'active' }).countDocuments();
 
                 response(res, 200, { products, totalProducts });
             } else {
-                const products = await productModel.find({ sellerId: sellerId }).sort({ createdAt: -1 });
+                const products = await productModel.find({ sellerId: sellerId, status: 'active' }).sort({ createdAt: -1 });
 
-                const totalProducts = await productModel.find({ sellerId: sellerId }).countDocuments();
+                const totalProducts = await productModel.find({ sellerId: sellerId, status: 'active' }).countDocuments();
 
                 response(res, 200, { products, totalProducts });
             }
@@ -239,6 +239,55 @@ class productController {
             console.log(error);
             response(res, 500, { error: 'Internal Server Error' });
 
+        }
+    }
+    getAllProductsDiscount = async (req, res) => {
+        try {
+            const { page, perPage, searchValue } = req.query;
+            const sellerId = req.id;
+            let skipPage = '';
+            if (page && perPage) {
+                skipPage = parseInt(perPage) * (parseInt(page) - 1);
+            }
+            if (searchValue && page && searchValue) {
+                const products = await productModel.find({
+                    $text: { $search: searchValue }, sellerId: sellerId, status: 'active', discount: { $gt: 0 }
+                }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({
+                    $text: { $search: searchValue }, sellerId: sellerId, status: 'active', discount: { $gt: 0 }
+                }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            } else if (searchValue === '' && page && perPage) {
+                const products = await productModel.find({ sellerId: sellerId, status: 'active', discount: { $gt: 0 } }).skip(skipPage).limit(perPage).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({ sellerId: sellerId, status: 'active', discount: { $gt: 0 } }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            } else {
+                const products = await productModel.find({ sellerId: sellerId, status: 'active', discount: { $gt: 0 } }).sort({ createdAt: -1 });
+
+                const totalProducts = await productModel.find({ sellerId: sellerId, status: 'active', discount: { $gt: 0 } }).countDocuments();
+
+                response(res, 200, { products, totalProducts });
+            }
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Server Error' });
+        }
+    }
+    deleteProduct = async (req, res) => {
+        try {
+            const { id } = req.params;
+            const deleteProduct = await productModel.findByIdAndUpdate(id, { status: 'deactive' });
+            if (!deleteProduct) {
+                response(res, 404, { error: 'Product not found' });
+            }
+            response(res, 200, { message: 'Product Deleted Successfully', id });
+        } catch (error) {
+            console.log(error);
+            response(res, 500, { error: 'Internal Server Error' });
         }
     }
 }

@@ -33,20 +33,20 @@ class homeController {
     }
     getProducts = async (req, res) => {
         try {
-            const products1 = await productModel.find({}).limit(12).sort({
+            const products1 = await productModel.find({status: 'active'}).limit(12).sort({
                 createdAt: -1
             })
-            const products2 = await productModel.find({}).limit(9).sort({
+            const products2 = await productModel.find({status: 'active'}).limit(9).sort({
                 createdAt: -1
             })
             const latest_products = this.formatProduct(products2);
 
-            const products3 = await productModel.find({}).limit(9).sort({
+            const products3 = await productModel.find({status: 'active'}).limit(9).sort({
                 rating: -1
             })
             const topRated_products = this.formatProduct(products3);
 
-            const products4 = await productModel.find({}).limit(9).sort({
+            const products4 = await productModel.find({status: 'active'}).limit(9).sort({
                 discount: -1
             })
             const discount_products = this.formatProduct(products4);
@@ -70,11 +70,11 @@ class homeController {
                 min: 0,
                 max: 0,
             }
-            const products = await productModel.find().limit(9).sort({
+            const products = await productModel.find({status: 'active'}).limit(9).sort({
                 createdAt: -1
             })
             const latest_products = this.formatProduct(products);
-            const getForPrice = await productModel.find().sort({
+            const getForPrice = await productModel.find({status: 'active'}).sort({
                 'price': 1
             })
             if (getForPrice.length > 0) {
@@ -95,7 +95,7 @@ class homeController {
         try {
             const perPage = 12;
             req.query.perPage = perPage;
-            const products = await productModel.find().sort({
+            const products = await productModel.find({status: 'active'}).sort({
                 createdAt: -1
             })
             const totalProducts = new filterProducts(products, req.query).searchQuery().categoryQuery().ratingQuery().priceQuery().sortByPrice().countProducts();
@@ -121,12 +121,17 @@ class homeController {
                 $and: [
                     {
                         _id: {
-                            $ne: product.id
+                            $ne: product._id
                         }
                     },
                     {
                         category: {
                             $eq: product.category
+                        }
+                    },
+                    {
+                        status: {
+                            $eq: 'active'
                         }
                     }
 
@@ -144,7 +149,12 @@ class homeController {
                         sellerId: {
                             $eq: product.sellerId
                         }
-                    }
+                    },
+                    {
+                        status: {
+                            $eq: 'active'
+                        }
+                    }                    
                 ]
             }).limit(3);
 
